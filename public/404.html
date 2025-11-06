@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Not found — redirecting</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <script>
+      // Try to load index.html and replace the current document so SPA routing works on GitHub Pages
+      (async () => {
+        try {
+          const res = await fetch(window.location.origin + '/index.html');
+          const html = await res.text();
+          document.open();
+          document.write(html);
+          // keep the current URL in address bar
+          history.replaceState({}, '', window.location.pathname + window.location.search + window.location.hash);
+          document.close();
+        } catch (e) {
+          // fallback: redirect to root
+          window.location.replace('/');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    Redirecting...
+  </body>
+</html>
