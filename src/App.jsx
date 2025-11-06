@@ -1,5 +1,5 @@
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Terms } from './components/Terms'
 import { QueryBuilder } from './components/QueryBuilder'
 import { Studies } from './components/Studies'
@@ -18,6 +18,22 @@ export default function App () {
   const gridRef = useRef(null)
   const [sizes, setSizes] = useState([28, 44, 28]) // [left, middle, right]
   const MIN_PX = 240
+
+  // restore saved pane sizes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ui.sizes')
+      if (saved) {
+        const s = JSON.parse(saved)
+        if (Array.isArray(s) && s.length === 3) setSizes(s)
+      }
+    } catch {}
+  }, [])
+
+  // persist sizes on change
+  useEffect(() => {
+    try { localStorage.setItem('ui.sizes', JSON.stringify(sizes)) } catch {}
+  }, [sizes])
 
   const startDrag = (which, e) => {
     e.preventDefault()
@@ -58,16 +74,46 @@ export default function App () {
 
   return (
     <div className="app">
-      {/* Inline style injection to enforce no-hover look */}
+      {/* Dark theme styling overrides */}
       <style>{`
         :root {
-          --primary-600: #2563eb;
-          --primary-700: #1d4ed8;
+          --primary-600: #3b82f6;
+          --primary-700: #2563eb;
           --primary-800: #1e40af;
-          --border: #e5e7eb;
+          --border: #333333;
+          --bg-card: #1e1e1e;
+          --bg-elevated: #1a1a1a;
+          --fg: #e5e5e5;
+          --fg-bright: #ffffff;
+          --muted: #a0a0a0;
         }
-        .app { padding-right: 0 !important; }
-        .app__grid { width: 100vw; max-width: 100vw; }
+        
+        .app { 
+          padding-right: 0 !important; 
+          background: var(--bg) !important;
+          color: var(--fg) !important;
+        }
+        
+        .app__grid { 
+          width: 100%; 
+          max-width: 100%; 
+        }
+        
+        .app__header {
+          background: var(--bg-card);
+          padding: 16px 18px;
+          border-radius: 12px;
+          border: 1px solid var(--border);
+        }
+        
+        .app__title {
+          color: var(--fg-bright);
+        }
+        
+        .app__subtitle {
+          color: var(--muted);
+        }
+        
         .card input[type="text"],
         .card input[type="search"],
         .card input[type="number"],
@@ -76,73 +122,76 @@ export default function App () {
           width: 100% !important;
           max-width: 100% !important;
           display: block;
+          background: var(--bg-elevated) !important;
+          color: var(--fg) !important;
+          border: 1px solid var(--border) !important;
         }
-        /* Downsized buttons */
+        
+        .card input:focus,
+        .card select:focus,
+        .card textarea:focus {
+          border-color: var(--primary-600) !important;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        }
+        
+        /* Button styling */
         .card button,
         .card [role="button"],
         .card .btn,
         .card .button {
-          font-size: 12px !important;
-          padding: 4px 8px !important;
+          font-size: 13px !important;
+          padding: 7px 12px !important;
           border-radius: 8px !important;
           line-height: 1.2 !important;
           background: var(--primary-600) !important;
           color: #fff !important;
           border: none !important;
+          transition: background 0.2s ease !important;
         }
-        /* No visual change on hover/active */
+        
         .card button:hover,
-        .card button:active,
         .card [role="button"]:hover,
-        .card [role="button"]:active,
         .card .btn:hover,
+        .card .button:hover {
+          background: var(--primary-700) !important;
+        }
+        
+        .card button:active,
+        .card [role="button"]:active,
         .card .btn:active,
-        .card .button:hover,
         .card .button:active {
-          background: var(--primary-600) !important;
-          color: #fff !important;
+          background: var(--primary-800) !important;
         }
-        /* Toolbars / chips also no-hover */
-        .card .toolbar button,
-        .card .toolbar [role="button"],
-        .card .toolbar .btn,
-        .card .toolbar .button,
-        .card .qb-toolbar button,
-        .card .qb-toolbar [role="button"],
-        .card .qb-toolbar .btn,
-        .card .qb-toolbar .button,
-        .card .query-builder button,
-        .card .query-builder [role="button"],
-        .card .query-builder .btn,
-        .card .query-builder .button,
-        .card .chip,
-        .card .pill,
-        .card .tag {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          border: none !important;
-        }
-        .card .toolbar button:hover,
-        .card .qb-toolbar button:hover,
-        .card .query-builder button:hover,
-        .card .chip:hover,
-        .card .pill:hover,
-        .card .tag:hover,
-        .card .toolbar button:active,
-        .card .qb-toolbar button:active,
-        .card .query-builder button:active {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-        }
-        /* Disabled stays same color but dimmer for affordance */
-        .card .toolbar button:disabled,
-        .card .qb-toolbar button:disabled,
-        .card .query-builder button:disabled,
-        .card button[disabled],
+        
+        .card button:disabled,
         .card [aria-disabled="true"] {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          opacity: .55 !important;
+          background: var(--border-light) !important;
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+        }
+        
+        /* Canvas styling for dark theme */
+        canvas {
+          border-color: var(--border) !important;
+          background: var(--bg-elevated) !important;
+        }
+        
+        /* Tables */
+        table {
+          color: var(--fg) !important;
+        }
+        
+        thead {
+          background: var(--bg-elevated) !important;
+          color: var(--fg-bright) !important;
+        }
+        
+        tbody tr {
+          border-bottom: 1px solid var(--border) !important;
+        }
+        
+        tbody tr:hover {
+          background: rgba(59, 130, 246, 0.1) !important;
         }
       `}</style>
 
@@ -161,7 +210,6 @@ export default function App () {
 
         <section className="card card--stack" style={{ flexBasis: `${sizes[1]}%` }}>
           <QueryBuilder query={query} setQuery={setQuery} />
-          {/* <div className="hint">Current Query：<code className="hint__code">{query || '(empty)'}</code></div> */}
           <div className="divider" />
           <Studies query={query} />
         </section>

@@ -5,6 +5,7 @@ const X_RIGHT_ON_SCREEN_RIGHT = true;
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as nifti from 'nifti-reader-js'
 import { API_BASE } from '../api'
+import { Locations } from './Locations'
 
 const MNI_BG_URL = 'static/mni_2mm.nii.gz'
 
@@ -58,6 +59,40 @@ export function NiiViewer({ query }) {
   const [cz, setCz] = useState('0')
 
   const canvases = [useRef(null), useRef(null), useRef(null)]
+
+  // restore saved viewer params
+  useEffect(() => {
+    try {
+      const getNum = (k, def) => {
+        const v = localStorage.getItem(k); if (v==null) return def; const n = Number(v); return Number.isFinite(n)?n:def
+      }
+      const getStr = (k, def) => {
+        const v = localStorage.getItem(k); return v ?? def
+      }
+      setVoxel(getNum('viewer.voxel', 2))
+      setFwhm(getNum('viewer.fwhm', 10))
+      setKernel(getStr('viewer.kernel', 'gauss'))
+      setR(getNum('viewer.r', 6))
+      setOverlayAlpha(getNum('viewer.overlayAlpha', 0.5))
+      setThrMode(getStr('viewer.thrMode', 'pctl'))
+      setPctl(getNum('viewer.pctl', 95))
+      setThrValue(getNum('viewer.thrValue', 0))
+    } catch {}
+  }, [])
+
+  // persist viewer params
+  useEffect(() => {
+    try {
+      localStorage.setItem('viewer.voxel', String(voxel))
+      localStorage.setItem('viewer.fwhm', String(fwhm))
+      localStorage.setItem('viewer.kernel', String(kernel))
+      localStorage.setItem('viewer.r', String(r))
+      localStorage.setItem('viewer.overlayAlpha', String(overlayAlpha))
+      localStorage.setItem('viewer.thrMode', String(thrMode))
+      localStorage.setItem('viewer.pctl', String(pctl))
+      localStorage.setItem('viewer.thrValue', String(thrValue))
+    } catch {}
+  }, [voxel, fwhm, kernel, r, overlayAlpha, thrMode, pctl, thrValue])
 
   const mapUrl = useMemo(() => {
     if (!query) return ''
@@ -370,6 +405,17 @@ const coord2idx = (c_mm, n, axis) => {
     if (axis==='z') setIz(coord2idx(parsed, nz, 'z'))
   }
 
+  // external jumper: move crosshairs to given MNI mm coordinates
+  const jumpToMM = (xmm, ymm, zmm) => {
+    const [nx, ny, nz] = dims
+    if (!nx) return
+    const xi = coord2idx(Number(xmm) || 0, nx, 'x')
+    const yi = coord2idx(Number(ymm) || 0, ny, 'y')
+    const zi = coord2idx(Number(zmm) || 0, nz, 'z')
+    setIx(xi); setIy(yi); setIz(zi)
+    setCx(String(xmm)); setCy(String(ymm)); setCz(String(zmm))
+  }
+
   // redraw on state changes
   useEffect(() => {
     const [nx, ny, nz] = dims
@@ -506,10 +552,23 @@ const coord2idx = (c_mm, n, axis) => {
 
       {/* map generation params */}
       <div className='rounded-xl border p-3 text-sm'>
-        <label className='flex flex-col'>Gaussian FWHM:
-          <input type='number' step='0.5' value={fwhm} onChange={e=>setFwhm(Number(e.target.value)||0)} className='w-28 rounded-lg border px-2 py-1'/>
-          <br />
-        </label>
+        <div className='grid grid-cols-2 gap-3'>
+          <label className='flex flex-col'>Voxel size (mm)
+            <input type='number' min={1} step='1' value={voxel} onChange={e=>setVoxel(Number(e.target.value)||2)} className='w-28 rounded-lg border px-2 py-1'/>
+          </label>
+          <label className='flex flex-col'>Kernel
+            <select value={kernel} onChange={e=>setKernel(e.target.value)} className='w-32 rounded-lg border px-2 py-1'>
+              <option value='gauss'>gauss</option>
+              <option value='uniform'>uniform</option>
+            </select>
+          </label>
+          <label className='flex flex-col'>Gaussian FWHM
+            <input type='number' step='0.5' value={fwhm} onChange={e=>setFwhm(Number(e.target.value)||0)} className='w-28 rounded-lg border px-2 py-1'/>
+          </label>
+          <label className='flex flex-col'>r (mm)
+            <input type='number' step='0.5' value={r} onChange={e=>setR(Number(e.target.value)||6)} className='w-28 rounded-lg border px-2 py-1'/>
+          </label>
+        </div>
       </div>
 
       {/* overlay controls */}
@@ -520,6 +579,17 @@ const coord2idx = (c_mm, n, axis) => {
         </label>
         <br />
       </div>
+
+      {/* Locations table integrated into Brain Viewer panel */}
+      {query && (
+        <div style={{ marginTop: '16px' }}>
+          <Locations query={query} onPickLocation={(loc) => {
+            if (!loc) return
+            const { x, y, z } = loc
+            jumpToMM(x, y, z)
+          }} />
+        </div>
+      )}
     </div>
   )
 }
