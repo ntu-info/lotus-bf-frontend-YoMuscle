@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720">
+  <rect width="100%" height="100%" fill="#111"/>
+  <rect x="40" y="40" width="1200" height="640" rx="20" fill="#1e1e1e" stroke="#333"/>
+  <text x="640" y="100" fill="#e5e5e5" font-family="Segoe UI, Arial, sans-serif" font-size="36" text-anchor="middle">Studies (Placeholder)</text>
+  <g transform="translate(80,140)">
+    <rect width="1120" height="460" rx="12" fill="#151515" stroke="#444"/>
+    <rect x="0" y="0" width="1120" height="40" fill="#1f1f1f"/>
+    <text x="20" y="26" fill="#ccc" font-size="18">Study ID  |  Year  |  Journal  |  Title  |  Authors</text>
+    <g fill="#2a2a2a">
+      <rect x="0" y="50" width="1120" height="36"/>
+      <rect x="0" y="122" width="1120" height="36"/>
+      <rect x="0" y="194" width="1120" height="36"/>
+      <rect x="0" y="266" width="1120" height="36"/>
+      <rect x="0" y="338" width="1120" height="36"/>
+    </g>
+  </g>
+</svg>
