@@ -1,6 +1,5 @@
 node_modules/
 package-lock.json
-
 .env
 public/static/readme/*.svg
 public/static/readme/*.png
